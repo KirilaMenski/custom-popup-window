@@ -5,13 +5,9 @@ import android.content.Context
 import android.graphics.Color
 import android.support.v4.content.ContextCompat
 import android.util.AttributeSet
-import android.util.Log
-import android.view.Menu
 import android.widget.RelativeLayout
 import android.view.View
-import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.PopupMenu
 
 /**
  * Created by Kirill Kholdzeyeu on ${DATA} 3:32 PM
@@ -22,28 +18,23 @@ class CustomLayout(context: Context, attrs: AttributeSet?) : RelativeLayout(cont
 
     init {
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.CustomLayout, 0, 0)
-        post { createMainLayout() }
         typedArray.recycle()
     }
 
-    /**
-     * Create menu from [menuId]
-     *
-     * @return [Menu]
-     */
-    private val menu: Menu
-        get() {
-            val popupMenu = PopupMenu(context, null)
-            val menuInflater = (context as Activity).menuInflater
-            menuInflater.inflate(R.menu.test_menu, popupMenu.menu)
-
-            return popupMenu.menu
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        super.onLayout(changed, l, t, r, b)
+        for (i in 0 until childCount) {
+            val view = getChildAt(i)
+            removeView(view)
+            children.add(view)
         }
+        createMainLayout()
+    }
 
     private fun getBackgroundView(): View {
         val view = View(context)
-        val width: Int = 100 * menu.size()
-        val height: Int = 100
+        val width: Int = getChildAt(0).width * childCount
+        val height: Int = getChildAt(0).height
         val viewLayoutParams = RelativeLayout.LayoutParams(width, height)
         viewLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
         view.background = ContextCompat.getDrawable(context, R.drawable.background)
@@ -56,8 +47,8 @@ class CustomLayout(context: Context, attrs: AttributeSet?) : RelativeLayout(cont
      * Create linear layout where will be located children
      */
     private fun createLinearLayout(): LinearLayout {
-        val width: Int = 100 * menu.size()
-        val height: Int = 100
+        val width: Int = getChildAt(0).width * childCount
+        val height: Int = getChildAt(0).height
         val linearLayout = LinearLayout(context)
         val linearLayoutParams = RelativeLayout.LayoutParams(width, LayoutParams.WRAP_CONTENT)
         linearLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
@@ -65,18 +56,10 @@ class CustomLayout(context: Context, attrs: AttributeSet?) : RelativeLayout(cont
         linearLayout.setBackgroundColor(Color.RED)
         linearLayout.layoutParams = linearLayoutParams
         linearLayout.orientation = LinearLayout.HORIZONTAL
-        Log.i("!!!!", "childCount: ${menu.size()}")
-        for (i in 0 until menu.size()) {
-            val childParams = LinearLayout.LayoutParams(height, height)
 
-            val imageView = ImageView(context)
-            imageView.id = menu.getItem(i).itemId
-            imageView.background = menu.getItem(i).icon
-            imageView.layoutParams = childParams
-
-            linearLayout.addView(imageView)
-
-        }
+        (0 until children.size)
+                .map { children[it] }
+                .forEach { linearLayout.addView(it) }
 
         return linearLayout
     }
