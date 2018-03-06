@@ -2,7 +2,6 @@ package com.ansgar.animatedlayoutswipe
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -27,7 +26,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val listener = object : TestRecycler.RecyclerListener {
-        override fun disableRecycleViewScroll(enable: Boolean) {
+        override fun enableRecycleViewScroll(enable: Boolean) {
             (recycler_view.layoutManager as CustomLayoutManager).scrollEnabled = enable
             Log.i("Scroll", "Enable: $enable")
         }
