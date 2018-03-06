@@ -1,10 +1,10 @@
 package com.ansgar.animatedlayoutswipe
 
-import android.app.Activity
 import android.content.Context
 import android.graphics.Color
 import android.support.v4.content.ContextCompat
 import android.util.AttributeSet
+import android.util.Log
 import android.widget.RelativeLayout
 import android.view.View
 import android.widget.LinearLayout
@@ -23,12 +23,18 @@ class CustomLayout(context: Context, attrs: AttributeSet?) : RelativeLayout(cont
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         super.onLayout(changed, l, t, r, b)
-        for (i in 0 until childCount) {
-            val view = getChildAt(i)
-            removeView(view)
-            children.add(view)
+        post {
+            for (i in 0 until childCount) {
+                val view = getChildAt(i)
+                children.add(view)
+                removeView(view)
+            }
+            Log.i("!!!!", "Size: ${children.size}")
+            for (i in 0 until children.size) {
+                Log.i("!!!!", "${children[i].id}")
+            }
+            createMainLayout()
         }
-        createMainLayout()
     }
 
     private fun getBackgroundView(): View {

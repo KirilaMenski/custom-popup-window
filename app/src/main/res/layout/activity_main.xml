@@ -4,9 +4,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <com.ansgar.animatedlayoutswipe.CustomLayout
         android:layout_width="wrap_content"
-        android:background="@android:color/holo_blue_bright"
         android:layout_height="wrap_content"
         android:gravity="bottom"
         android:orientation="horizontal">
@@ -41,7 +40,7 @@
             android:layout_height="60dp"
             android:src="@android:drawable/arrow_down_float" />
 
-    </LinearLayout>
+    </com.ansgar.animatedlayoutswipe.CustomLayout>
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"
