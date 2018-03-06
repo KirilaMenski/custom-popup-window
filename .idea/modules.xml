@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/AnimatedLayoutSwipe.iml" filepath="$PROJECT_DIR$/AnimatedLayoutSwipe.iml" />
+      <module fileurl="file://$PROJECT_DIR$/CustomPopupWindow.iml" filepath="$PROJECT_DIR$/CustomPopupWindow.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

@@ -5,6 +5,7 @@ import android.support.annotation.RequiresApi
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.*
+import android.widget.LinearLayout
 import kotlinx.android.synthetic.main.item_test.view.*
 
 /**
@@ -13,21 +14,33 @@ import kotlinx.android.synthetic.main.item_test.view.*
 class TestRecycler(private val items: List<TestItems>, private val listener: RecyclerListener) : RecyclerView.Adapter<TestRecycler.TestHolder>() {
 
     private var parent: ViewGroup? = null
-    private var gestureDetector: GestureDetector? = null
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onBindViewHolder(holder: TestHolder, position: Int) {
         val testItem = items[position]
         holder.bindView(testItem)
         holder.itemView.view.setOnLongClickListener {
-            Log.i("GestureListener", "Disable recycler view scrolling")
-            listener.disableRecycleViewScroll(false)
 
             val inflater = LayoutInflater.from(parent?.context)
             val view = inflater.inflate(R.layout.animated_layout, null)
-            val popupMenu = CustomPopupWindow(view, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            val popupMenu = CustomPopupWindow(view as LinearLayout)
             popupMenu.elevation = 10f
-            popupMenu.showAsDropDown(holder.itemView.view)
+            popupMenu.onMenuItemSelectedListener = object : CustomPopupWindow.OnMenuItemSelectedListener {
+                override fun menuOpened() {
+                    listener.enableRecycleViewScroll(false)
+                }
+
+                override fun menuDismissed() {
+                    listener.enableRecycleViewScroll(true)
+                }
+
+                override fun itemSelected(position: Int, view: View) {
+                    Log.i("!!!!", "Item selected: $position, ${view.id};")
+                }
+            }
+            it.setOnTouchListener(popupMenu)
+            popupMenu.showAtLocation(it, Gravity.NO_GRAVITY, it.left, (holder.itemView.y+100).toInt())
+
             true
         }
 
@@ -50,7 +63,7 @@ class TestRecycler(private val items: List<TestItems>, private val listener: Rec
     }
 
     interface RecyclerListener {
-        fun disableRecycleViewScroll(disable: Boolean)
+        fun enableRecycleViewScroll(disable: Boolean)
     }
 
 }
