@@ -1,11 +1,14 @@
 package com.ansgar.animatedlayoutswipe
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.support.annotation.RequiresApi
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.*
+import android.view.animation.AnimationUtils
 import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import kotlinx.android.synthetic.main.item_test.view.*
 
 /**
@@ -20,27 +23,12 @@ class TestRecycler(private val items: List<TestItems>, private val listener: Rec
         val testItem = items[position]
         holder.bindView(testItem)
         holder.itemView.view.setOnLongClickListener {
-
-            val inflater = LayoutInflater.from(parent?.context)
-            val view = inflater.inflate(R.layout.animated_layout, null)
-            val popupMenu = CustomPopupWindow(view as LinearLayout)
-            popupMenu.elevation = 10f
-            popupMenu.onMenuItemSelectedListener = object : CustomPopupWindow.OnMenuItemSelectedListener {
-                override fun menuOpened() {
-                    listener.enableRecycleViewScroll(false)
-                }
-
-                override fun menuDismissed() {
-                    listener.enableRecycleViewScroll(true)
-                }
-
-                override fun itemSelected(position: Int, view: View) {
-                    Log.i("!!!!", "Item selected: $position, ${view.id};")
-                }
-            }
-            it.setOnTouchListener(popupMenu)
-            popupMenu.showAtLocation(it, Gravity.NO_GRAVITY, it.left, (holder.itemView.y+100).toInt())
-
+            showPopup(it, it.left, (holder.itemView.y + 50).toInt(), 0)
+            true
+        }
+        holder.itemView.image.setOnLongClickListener {
+            val offset: Int = holder.itemView.view.left + holder.itemView.txt_tv.width
+            showPopup(it, holder.itemView.view.left, (holder.itemView.y + 50).toInt(), offset)
             true
         }
 
@@ -64,6 +52,34 @@ class TestRecycler(private val items: List<TestItems>, private val listener: Rec
 
     interface RecyclerListener {
         fun enableRecycleViewScroll(disable: Boolean)
+    }
+
+
+    @SuppressLint("ResourceType")
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    private fun showPopup(anchor: View, x: Int, y: Int, offset: Int) {
+        val inflater = LayoutInflater.from(parent?.context)
+        val view = inflater.inflate(R.layout.linear_layout, null)
+        view.animation = AnimationUtils.loadAnimation(parent?.context, R.animator.popup_animation)
+        val popupMenu = CustomPopupWindow(view as RelativeLayout, R.id.linear_ll, R.id.background)
+        popupMenu.elevation = 10f
+        popupMenu.offset = offset
+        popupMenu.onMenuItemSelectedListener = object : CustomPopupWindow.OnMenuItemSelectedListener {
+
+            override fun menuOpened() {
+                listener.enableRecycleViewScroll(false)
+            }
+
+            override fun menuDismissed() {
+                listener.enableRecycleViewScroll(true)
+            }
+
+            override fun itemSelected(position: Int, view: View) {
+                Log.i("!!!!", "Item selected: $position, ${view.id};")
+            }
+        }
+        anchor.setOnTouchListener(popupMenu)
+        popupMenu.showAtLocation(anchor, Gravity.NO_GRAVITY, x, y)
     }
 
 }
