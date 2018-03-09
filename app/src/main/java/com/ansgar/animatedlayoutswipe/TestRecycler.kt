@@ -7,7 +7,6 @@ import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.*
 import android.view.animation.AnimationUtils
-import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import kotlinx.android.synthetic.main.item_test.view.*
 
@@ -60,7 +59,8 @@ class TestRecycler(private val items: List<TestItems>, private val listener: Rec
     private fun showPopup(anchor: View, x: Int, y: Int, offset: Int) {
         val inflater = LayoutInflater.from(parent?.context)
         val view = inflater.inflate(R.layout.linear_layout, null)
-        view.animation = AnimationUtils.loadAnimation(parent?.context, R.animator.popup_animation)
+        view.animation = AnimationUtils.loadAnimation(parent?.context, R.animator.open_popup_animation)
+//        val popupMenu = CustomPopupWindow(view as RelativeLayout, R.id.linear_ll, R.id.background)
         val popupMenu = CustomPopupWindow(view as RelativeLayout, R.id.linear_ll, R.id.background)
         popupMenu.elevation = 10f
         popupMenu.offset = offset
