@@ -5,7 +5,6 @@ import android.animation.AnimatorSet
 import android.animation.ValueAnimator
 import android.graphics.Color
 import android.support.v4.content.ContextCompat
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.Animation
@@ -31,7 +30,6 @@ class CustomPopupWindow(contentView: RelativeLayout?, resourceId: Int, backgroun
 
     private var childLinearLayout: LinearLayout? = null
     private var currentView: View? = null
-    private var previousView: View? = null
     private var currentPosition: Int = -1
     private var defaultChildParams: LinearLayout.LayoutParams? = null
     private var backgroundView: View? = null
@@ -69,6 +67,8 @@ class CustomPopupWindow(contentView: RelativeLayout?, resourceId: Int, backgroun
         }
     }
 
+    private var touchXPos: Int = 0
+    private var touchYPos: Int = 0
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
         val x: Int = event?.x!!.toInt() + offset
         val y: Int = event.y.toInt()
@@ -78,13 +78,19 @@ class CustomPopupWindow(contentView: RelativeLayout?, resourceId: Int, backgroun
                 topSwipeArea = 0
                 bottomSwipeArea = 400
 
-                if (!checkInArea(x, y)) {
-                    dismissPopup()
-                }
+                touchXPos = x
+                touchYPos = y
+
+                if (!checkInArea(x, y)) dismissPopup()
+
                 onMoveMotionEvent(x, y)
             }
             MotionEvent.ACTION_MOVE -> {
-                onMoveMotionEvent(x, y)
+                if (Math.abs(x - touchXPos) >= 30 || Math.abs(y - touchYPos) >= 30) {
+                    onMoveMotionEvent(x, y)
+                    touchXPos = x
+                    touchYPos = y
+                }
             }
             MotionEvent.ACTION_UP -> {
                 offset = 0
@@ -92,9 +98,8 @@ class CustomPopupWindow(contentView: RelativeLayout?, resourceId: Int, backgroun
                     onMenuItemSelectedListener?.itemSelected(currentPosition, currentView!!)
                     dismissPopup()
                 }
-                if (!checkInArea(x, y)) {
-                    dismissPopup()
-                }
+
+                if (!checkInArea(x, y)) dismissPopup()
             }
         }
         return false
@@ -103,39 +108,50 @@ class CustomPopupWindow(contentView: RelativeLayout?, resourceId: Int, backgroun
 
     private val selectedChildWidth = defaultChildParams?.width!! * 2
     private val smallChildSize = (defaultChildParams?.width!! * 5 - selectedChildWidth) / 4
+    private var prevX: Int = 0
     private fun onMoveMotionEvent(x: Int, y: Int) {
         if (checkInArea(x, y)) {
-            for (i in 0 until childLinearLayout!!.childCount) {
-                val view = childLinearLayout!!.getChildAt(i)
+            val directRight = x - prevX > 0
 
-                if (x in view.left..view.right && y in topSwipeArea..bottomSwipeArea) {
-                    currentView = view
-                    currentPosition = i
+            if (directRight) {
+                for (i in childLinearLayout!!.childCount - 1 downTo 0) {
+                    onCheckChildList(i, x, y)
                 }
-
-                if (view == previousView) {
-                    previousView = null
-                }
-
-                arrayListObjectAnimators.add(getValueAnimator(view, smallChildSize, true))
-
-                if (currentView != previousView) {
-                    arrayListObjectAnimators.add(getValueAnimator(view, selectedChildWidth, true))
-                    previousView = currentView
+            } else {
+                for (i in 0 until childLinearLayout!!.childCount) {
+                    onCheckChildList(i, x, y)
                 }
             }
+
             arrayListObjectAnimators.add(getValueAnimator(backgroundView!!, smallChildSize))
+            prevX = x
         } else {
             (0 until childLinearLayout!!.childCount)
                     .map { childLinearLayout!!.getChildAt(it) }
                     .forEach {
                         arrayListObjectAnimators.add(getValueAnimator(it, selectedChildWidth / 2, true))
                     }
+            currentView = null
             arrayListObjectAnimators.add(getValueAnimator(backgroundView!!, selectedChildWidth / 2))
         }
 
         if (!isAnimationStarted) {
             animateChildren(100)
+        }
+    }
+
+    private fun onCheckChildList(index: Int, x: Int, y: Int) {
+        val view = childLinearLayout!!.getChildAt(index)
+
+        if (x in view.left..view.right && y in topSwipeArea..bottomSwipeArea) {
+            currentView = view
+            currentPosition = index
+        }
+
+        if (index != currentPosition) {
+            arrayListObjectAnimators.add(getValueAnimator(view, smallChildSize, true))
+        } else {
+            arrayListObjectAnimators.add(getValueAnimator(view, selectedChildWidth, true))
         }
     }
 
