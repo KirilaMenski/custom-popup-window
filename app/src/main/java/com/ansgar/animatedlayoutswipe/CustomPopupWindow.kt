@@ -8,7 +8,6 @@ import android.support.v4.content.ContextCompat
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import android.view.animation.Animation
 import android.widget.*
 import android.view.animation.AnimationSet
@@ -39,15 +38,14 @@ class CustomPopupWindow(contentView: RelativeLayout?, resourceId: Int, backgroun
     private var defaultBackgroundViewParam: RelativeLayout.LayoutParams? = null
     private var startX: Int = 0
     private var startY: Int = 0
-    private var childrenCount: Int = 0
     var onMenuItemSelectedListener: OnMenuItemSelectedListener? = null
+
+    val arrayListObjectAnimators = ArrayList<Animator>()
 
     init {
         animationSet = AnimationSet(false)
         childLinearLayout = contentView?.findViewById(resourceId)
         backgroundView = contentView?.findViewById(backgroundResId)
-
-        childrenCount = childLinearLayout?.childCount!!
 
         defaultBackgroundViewParam = backgroundView?.layoutParams as RelativeLayout.LayoutParams?
 //        defaultChildParams = (childLinearLayout as LinearLayout).getChildAt(0).layoutParams as LinearLayout.LayoutParams?
@@ -108,55 +106,36 @@ class CustomPopupWindow(contentView: RelativeLayout?, resourceId: Int, backgroun
     private fun onMoveMotionEvent(x: Int, y: Int) {
         if (checkInArea(x, y)) {
             for (i in 0 until childLinearLayout!!.childCount) {
-                var view = childLinearLayout!!.getChildAt(i)
+                val view = childLinearLayout!!.getChildAt(i)
 
                 if (x in view.left..view.right && y in topSwipeArea..bottomSwipeArea) {
                     currentView = view
                     currentPosition = i
-
-//                    if (currentView != previousView) {
-//                        resizeAnimation(view, selectedChildWidth, 100)
-//                        previousView = currentView
-//
-//                    }
-
                 }
-//                else {
-//                    if (view == previousView) {
-//                        resizeAnimation(view, smallChildSize, 100)
-//                        resizeAnimation(backgroundView!!, selectedChildWidth / 2, 100, false)
-//                        previousView = null
-//                    } else {
-//                        resizeAnimation(view, smallChildSize, 100)
-//                    }
-//                }
 
                 if (view == previousView) {
-                    resizeAnimation(view, smallChildSize, 100)
-//                        resizeAnimation(backgroundView!!, selectedChildWidth / 2, 100, false)
                     previousView = null
-                } else {
-                    resizeAnimation(view, smallChildSize, 100)
                 }
+
+                arrayListObjectAnimators.add(getValueAnimator(view, smallChildSize, true))
 
                 if (currentView != previousView) {
-                    resizeAnimation(view, selectedChildWidth, 100)
+                    arrayListObjectAnimators.add(getValueAnimator(view, selectedChildWidth, true))
                     previousView = currentView
-
                 }
             }
+            arrayListObjectAnimators.add(getValueAnimator(backgroundView!!, smallChildSize))
         } else {
-//            currentView = null
-//            currentPosition = -1
-//        }
-//        if (currentView == null) {
             (0 until childLinearLayout!!.childCount)
                     .map { childLinearLayout!!.getChildAt(it) }
                     .forEach {
-                        resizeAnimation(it, selectedChildWidth / 2, 100)
+                        arrayListObjectAnimators.add(getValueAnimator(it, selectedChildWidth / 2, true))
                     }
-            Log.i("!!!!", "Selected Width: ${defaultBackgroundViewParam!!.height}")
-//            resizeAnimation(backgroundView!!, defaultBackgroundViewParam!!.height, 100, false)
+            arrayListObjectAnimators.add(getValueAnimator(backgroundView!!, selectedChildWidth / 2))
+        }
+
+        if (!isAnimationStarted) {
+            animateChildren(100)
         }
     }
 
@@ -193,10 +172,8 @@ class CustomPopupWindow(contentView: RelativeLayout?, resourceId: Int, backgroun
         onMenuItemSelectedListener?.menuOpened()
     }
 
-    private fun resizeAnimation(view: View, start: Int, duration: Long, resizeWidth: Boolean = true) {
-
-        val arrayListObjectAnimators = ArrayList<Animator>()
-        val valueAnimator = ValueAnimator.ofInt(view.measuredWidth, start)
+    private fun getValueAnimator(view: View, start: Int, resizeWidth: Boolean = false): ValueAnimator {
+        val valueAnimator = ValueAnimator.ofInt(view.measuredHeight, start)
         valueAnimator.addUpdateListener {
             val value = valueAnimator.animatedValue as Int
             val layoutParams = view.layoutParams
@@ -205,7 +182,10 @@ class CustomPopupWindow(contentView: RelativeLayout?, resourceId: Int, backgroun
             view.layoutParams = layoutParams
         }
 
-        arrayListObjectAnimators.add(valueAnimator)
+        return valueAnimator
+    }
+
+    private fun animateChildren(duration: Long) {
         val objectAnimators = arrayListObjectAnimators.toTypedArray()
         val animSetXY = AnimatorSet()
         animSetXY.addListener(object : Animator.AnimatorListener {
@@ -215,6 +195,7 @@ class CustomPopupWindow(contentView: RelativeLayout?, resourceId: Int, backgroun
 
             override fun onAnimationEnd(animation: Animator?) {
                 isAnimationStarted = false
+                arrayListObjectAnimators.clear()
             }
 
             override fun onAnimationCancel(animation: Animator?) {
@@ -223,7 +204,6 @@ class CustomPopupWindow(contentView: RelativeLayout?, resourceId: Int, backgroun
 
             override fun onAnimationStart(animation: Animator?) {
                 isAnimationStarted = true
-                Log.i("!!!!", "arrayListObjectAnimators size: ${arrayListObjectAnimators.size}")
             }
         })
         animSetXY.playTogether(*objectAnimators)
