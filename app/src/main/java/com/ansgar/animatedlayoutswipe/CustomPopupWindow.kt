@@ -13,7 +13,6 @@ import android.view.animation.AnimationSet
 import android.view.animation.TranslateAnimation
 import java.util.ArrayList
 
-
 /**
  * Created by kirill on 4.3.18.
  */
