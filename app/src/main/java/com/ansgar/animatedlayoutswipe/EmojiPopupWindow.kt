@@ -2,7 +2,6 @@ package com.ansgar.animatedlayoutswipe
 
 import android.animation.*
 import android.annotation.SuppressLint
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.AlphaAnimation
@@ -84,7 +83,8 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
      */
     private var touchXPos: Int = 0
     private var touchYPos: Int = 0
-    /** At the first time popup window touch event called from outside.
+    /**
+     * At the first time popup window touch event called from outside.
      * When [PopupWindow] is displayed and after that touched again in swipe area then touch
      * event called from this window. That's  why {x;y} is different for both mode.
      * To align swipe area for both mode need to change [topSwipeArea] and [bottomSwipeArea].
