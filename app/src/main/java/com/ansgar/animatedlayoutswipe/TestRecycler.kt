@@ -1,6 +1,7 @@
 package com.ansgar.animatedlayoutswipe
 
 import android.annotation.SuppressLint
+import android.graphics.Rect
 import android.os.Build
 import android.support.annotation.RequiresApi
 import android.support.v7.widget.RecyclerView
@@ -27,7 +28,9 @@ class TestRecycler(private val items: List<TestItems>, private val listener: Rec
         }
         holder.itemView.image.setOnLongClickListener {
             val offset: Int = holder.itemView.view.left + holder.itemView.txt_tv.width
-            showPopup(it, holder.itemView.view.left, (holder.itemView.y + 50).toInt(), offset)
+            val rect = Rect()
+            holder.itemView.view.getGlobalVisibleRect(rect)
+            showPopup(it, holder.itemView.view.left, rect.top - rect.height() * 2, offset)
             true
         }
 
@@ -60,11 +63,10 @@ class TestRecycler(private val items: List<TestItems>, private val listener: Rec
         val inflater = LayoutInflater.from(parent?.context)
         val view = inflater.inflate(R.layout.linear_layout, null)
         view.animation = AnimationUtils.loadAnimation(parent?.context, R.animator.open_popup_animation)
-//        val popupMenu = CustomPopupWindow(view as RelativeLayout, R.id.linear_ll, R.id.background)
-        val popupMenu = CustomPopupWindow(view as RelativeLayout, R.id.linear_ll, R.id.background)
+        val popupMenu = EmojiPopupWindow(view as RelativeLayout, R.id.linear_ll, R.id.background)
         popupMenu.elevation = 10f
         popupMenu.offset = offset
-        popupMenu.onMenuItemSelectedListener = object : CustomPopupWindow.OnMenuItemSelectedListener {
+        popupMenu.onMenuItemSelectedListener = object : EmojiPopupWindow.OnMenuItemSelectedListener {
 
             override fun menuOpened() {
                 listener.enableRecycleViewScroll(false)
@@ -79,6 +81,7 @@ class TestRecycler(private val items: List<TestItems>, private val listener: Rec
             }
         }
         anchor.setOnTouchListener(popupMenu)
+        Log.i("!!!!", "X:Y {$x;$y}")
         popupMenu.showAtLocation(anchor, Gravity.NO_GRAVITY, x, y)
     }
 
