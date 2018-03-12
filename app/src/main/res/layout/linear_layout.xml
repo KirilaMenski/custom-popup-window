@@ -9,7 +9,7 @@
     <View
         android:id="@+id/background"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="45dp"
         android:layout_alignParentBottom="true"
         android:background="@drawable/background"
         android:elevation="5dp" />
@@ -43,8 +43,8 @@
 
             <com.airbnb.lottie.LottieAnimationView
                 android:id="@+id/first"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
                 android:padding="3dp"
                 app:lottie_autoPlay="true"
                 app:lottie_fileName="like_lottie.json"
@@ -72,8 +72,8 @@
 
             <com.airbnb.lottie.LottieAnimationView
                 android:id="@+id/second"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
                 android:padding="3dp"
                 app:lottie_autoPlay="true"
                 app:lottie_fileName="helpful_lottie.json"
@@ -102,8 +102,8 @@
 
             <com.airbnb.lottie.LottieAnimationView
                 android:id="@+id/third"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
                 android:padding="3dp"
                 app:lottie_autoPlay="true"
                 app:lottie_fileName="smart_lottie.json"
@@ -132,8 +132,8 @@
 
             <com.airbnb.lottie.LottieAnimationView
                 android:id="@+id/fourth"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
                 android:padding="3dp"
                 app:lottie_autoPlay="true"
                 app:lottie_fileName="funny_lottie.json"
@@ -161,8 +161,8 @@
 
             <com.airbnb.lottie.LottieAnimationView
                 android:id="@+id/fifth"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
                 android:padding="3dp"
                 app:lottie_autoPlay="true"
                 app:lottie_fileName="uplifting_lottie.json"
