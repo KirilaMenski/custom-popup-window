@@ -81,14 +81,15 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
 
     /**
      * Unnecessary parameters which are responsible for the lack of choice in a small area (0, 0, 15, 15)
-     * At the first time popup window touch event called from outside.
-     * When PopupWindow is displayed and after that touched again in swipe area then touch
+     */
+    private var touchXPos: Int = 0
+    private var touchYPos: Int = 0
+    /** At the first time popup window touch event called from outside.
+     * When [PopupWindow] is displayed and after that touched again in swipe area then touch
      * event called from this window. That's  why {x;y} is different for both mode.
      * To align swipe area for both mode need to change [topSwipeArea] and [bottomSwipeArea].
      *
      */
-    private var touchXPos: Int = 0
-    private var touchYPos: Int = 0
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
         val x: Int = event?.x!!.toInt() + offset
         val y: Int = event.y.toInt()
