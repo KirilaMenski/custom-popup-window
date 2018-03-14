@@ -5,7 +5,6 @@ import android.graphics.Rect
 import android.os.Build
 import android.support.annotation.RequiresApi
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.*
 import android.view.animation.AnimationUtils
 import android.widget.RelativeLayout
@@ -68,20 +67,19 @@ class TestRecycler(private val items: List<TestItems>, private val listener: Rec
         popupMenu.offset = offset
         popupMenu.onMenuItemSelectedListener = object : EmojiPopupWindow.OnMenuItemSelectedListener {
 
-            override fun menuOpened() {
+            override fun onPopupOpened() {
                 listener.enableRecycleViewScroll(false)
             }
 
-            override fun menuDismissed() {
+            override fun onPopupDismissed() {
                 listener.enableRecycleViewScroll(true)
             }
 
-            override fun itemSelected(position: Int, view: View) {
-                Log.i("!!!!", "Item selected: $position, ${view.id};")
+            override fun onItemSelected(position: Int, view: View) {
+
             }
         }
         anchor.setOnTouchListener(popupMenu)
-        Log.i("!!!!", "X:Y {$x;$y}")
         popupMenu.showAtLocation(anchor, Gravity.NO_GRAVITY, x, y)
     }
 

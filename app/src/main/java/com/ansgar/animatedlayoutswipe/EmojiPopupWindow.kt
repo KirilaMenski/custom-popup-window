@@ -34,7 +34,6 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
     private var currentPosition: Int = -1
     private var previousPosition: Int = -1
     private var prevX: Int = 0
-    private var childSize: Int = 0
 
     var onMenuItemSelectedListener: OnMenuItemSelectedListener? = null
 
@@ -50,6 +49,7 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
         animationSet = AnimationSet(false)
         childrenContainerLl = contentView?.findViewById(resourceId)
         backgroundView = contentView?.findViewById(backgroundResId)
+        isOutsideTouchable = true
 
         initChildrenParams()
 
@@ -73,23 +73,20 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
         } else if (children is ImageView) {
             defaultChildParams = children.layoutParams as LinearLayout.LayoutParams
         }
-        childSize = (childrenContainerLl as LinearLayout).childCount
+
         selectedChildWidth = defaultChildParams?.width!! * 2
-        smallChildSize = (defaultChildParams?.width!! * childSize - selectedChildWidth) / 4
+        smallChildSize = (defaultChildParams?.width!! * 5 - selectedChildWidth) / 4
     }
 
     /**
      * Unnecessary parameters which are responsible for the lack of choice in a small area (0, 0, 15, 15)
+     * At the first time popup window touch event called from outside.
+     * When PopupWindow is displayed and after that touched again in swipe area then touch
+     * event called from this window. That's  why {x;y} is different for both mode.
+     * To align swipe area for both mode need to change [topSwipeArea] and [bottomSwipeArea].
      */
     private var touchXPos: Int = 0
     private var touchYPos: Int = 0
-    /**
-     * At the first time popup window touch event called from outside.
-     * When [PopupWindow] is displayed and after that touched again in swipe area then touch
-     * event called from this window. That's  why {x;y} is different for both mode.
-     * To align swipe area for both mode need to change [topSwipeArea] and [bottomSwipeArea].
-     *
-     */
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
         val x: Int = event?.x!!.toInt() + offset
         val y: Int = event.y.toInt()
@@ -114,7 +111,7 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
             MotionEvent.ACTION_UP -> {
                 offset = 0
                 if (currentView != null) {
-                    onMenuItemSelectedListener?.itemSelected(currentPosition, currentView!!)
+                    onMenuItemSelectedListener?.onItemSelected(currentPosition, currentView!!)
                     pulseAnimation()
                 }
 
@@ -228,7 +225,7 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
     }
 
     /**
-     * Define swipe area
+     * Available swipe area
      * @param x is coordinate where finger located along the x-axis
      * @param y is coordinate where finger located along the y-axis
      */
@@ -244,7 +241,7 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
      */
     override fun showAtLocation(parent: View?, gravity: Int, x: Int, y: Int) {
         super.showAtLocation(parent, gravity, x, y)
-        onMenuItemSelectedListener?.menuOpened()
+        onMenuItemSelectedListener?.onPopupOpened()
     }
 
     /**
@@ -370,7 +367,7 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
             }
 
             override fun onAnimationEnd(animation: Animation) {
-                onMenuItemSelectedListener?.menuDismissed()
+                onMenuItemSelectedListener?.onPopupDismissed()
                 dismiss()
             }
 
@@ -385,16 +382,16 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
      * Callbacks of [EmojiPopupWindow].
      */
     interface OnMenuItemSelectedListener {
-        fun menuOpened()
+        fun onPopupOpened()
 
-        fun menuDismissed()
+        fun onPopupDismissed()
 
         /**
-         * [itemSelected] called when specific view is selected.
+         * [onItemSelected] called when specific view is selected.
          * @param position is a number of view in [childrenContainerLl].
          * @param view is a selected view
          */
-        fun itemSelected(position: Int, view: View)
+        fun onItemSelected(position: Int, view: View)
     }
 
 }
