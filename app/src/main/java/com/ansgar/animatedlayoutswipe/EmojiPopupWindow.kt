@@ -118,7 +118,7 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
             }
             MotionEvent.ACTION_UP -> {
                 offset = 0
-                if (currentView != null && touchCount < 2) {
+                if (currentView != null && touchCount < 2 && isShowing) {
                     currentView?.let {
                         onMenuItemSelectedListener?.onItemSelected(currentPosition, it)
                         pulseAnimationStarted = pulseAnimation(it)
