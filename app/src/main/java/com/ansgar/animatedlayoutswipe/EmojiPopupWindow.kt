@@ -34,6 +34,7 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
     private var currentPosition: Int = -1
     private var previousPosition: Int = -1
     private var prevX: Int = 0
+    private var pulseAnimationStarted: Boolean = false
 
     var onMenuItemSelectedListener: OnMenuItemSelectedListener? = null
 
@@ -49,7 +50,8 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
         animationSet = AnimationSet(false)
         childrenContainerLl = contentView?.findViewById(resourceId)
         backgroundView = contentView?.findViewById(backgroundResId)
-        isOutsideTouchable = true
+        isOutsideTouchable = false
+        setPopupFocusable(true)
 
         initChildrenParams()
 
@@ -89,15 +91,15 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
      */
     private var touchXPos: Int = 0
     private var touchYPos: Int = 0
+    private var touchCount: Int = 0
     override fun onTouch(v: View, event: MotionEvent): Boolean {
         val x: Int = event.x.toInt() + offset
         val y: Int = event.y.toInt()
-
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
+                touchCount++
                 topSwipeArea = 1
                 bottomSwipeArea = contentView.height + contentView.height / 2
-
                 touchXPos = x
                 touchYPos = y
 
@@ -116,17 +118,14 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
             }
             MotionEvent.ACTION_UP -> {
                 offset = 0
-                if (currentView != null) {
+                if (currentView != null && touchCount < 2) {
                     currentView?.let {
                         onMenuItemSelectedListener?.onItemSelected(currentPosition, it)
-                        pulseAnimation(it)
+                        pulseAnimationStarted = pulseAnimation(it)
                     }
                 }
 
                 if (!checkInArea(x, y)) dismissPopup()
-            }
-            MotionEvent.ACTION_OUTSIDE -> {
-                dismissPopup()
             }
         }
         return false
@@ -145,12 +144,12 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
             //If direction right then sorted out from end else from start
             if (directRight) {
                 for (i in (childrenContainerLl?.childCount?.minus(1) ?: 0) downTo 0) {
-                    onCheckChildList(i, x, y)
+                    onCheckViewInChildrenList(i, x, y)
                 }
             } else {
                 val size = childrenContainerLl?.childCount ?: 0
                 for (i in 0 until size) {
-                    onCheckChildList(i, x, y)
+                    onCheckViewInChildrenList(i, x, y)
                 }
             }
             childrenAnimatorsHash[0] = backgroundView?.let { getValueAnimator(it, smallChildSize) }
@@ -190,9 +189,8 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
      * @param x is a finger position along x-axis
      * @param y is a finger position along y-axis
      */
-    private fun onCheckChildList(index: Int, x: Int, y: Int) {
+    private fun onCheckViewInChildrenList(index: Int, x: Int, y: Int) {
         val view = childrenContainerLl?.getChildAt(index)
-
         if (view?.left?.rangeTo(view.right)?.contains(x) == true && y in topSwipeArea..bottomSwipeArea) {
             currentView = view
             currentPosition = index
@@ -200,7 +198,6 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
 
         if (view is LinearLayout) {
             val imageView = view.getChildAt(1)
-
             if (index != currentPosition) {
                 removeChildLabelAnimated(view.getChildAt(0))
                 childrenAnimatorsHash[index + 1] = getValueAnimator(imageView, smallChildSize, true)
@@ -221,7 +218,7 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
      * otherwise skip
      */
     private fun showChildLabel() {
-        if (currentView != null && currentView is LinearLayout) {
+        if (currentView != null && currentView is LinearLayout && !pulseAnimationStarted) {
             val view = (currentView as LinearLayout).getChildAt(0)
             if (view.visibility != View.VISIBLE) {
                 view.visibility = View.VISIBLE
@@ -332,7 +329,7 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
      * @param duration animation time in milliseconds. Default 100ms
      * @param repeatCount how many times pulse will repeat. Default 3 times
      */
-    private fun pulseAnimation(view: View, duration: Long = 100, repeatCount: Int = 3) {
+    private fun pulseAnimation(view: View, duration: Long = 100, repeatCount: Int = 3): Boolean {
         val pulseAnimator = ObjectAnimator.ofPropertyValuesHolder(view,
                 PropertyValuesHolder.ofFloat("scaleX", 0.6f),
                 PropertyValuesHolder.ofFloat("scaleY", 0.6f))
@@ -353,13 +350,13 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
             }
 
             override fun onAnimationStart(animation: Animator?) {
-                removeChildLabel()
                 disappearViews()
                 disappearBackground()
+                removeChildLabel()
             }
-
         })
         pulseAnimator.start()
+        return true
     }
 
     /**
@@ -368,12 +365,10 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
      */
     private fun disappearViews() {
         val size = childrenContainerLl?.childCount ?: 0
-        for (i in 0 until size) {
-            if (currentPosition != i) {
-                val view = childrenContainerLl?.getChildAt(i)
-                view?.let { executeAlphaAnimation(it, 1.0f, 0.0f, 100) }
-            }
-        }
+        (0 until size)
+                .filter { currentPosition != it }
+                .map { childrenContainerLl?.getChildAt(it) }
+                .forEach { view -> view?.let { executeAlphaAnimation(it, 1.0f, 0.0f, 100) } }
     }
 
     /**
@@ -404,8 +399,7 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
      * Disposes of the popup window with animation
      */
     private fun dismissPopup() {
-        val animateSlideUp = TranslateAnimation(0f, 0f, contentView.y,
-                contentView.height.toFloat())
+        val animateSlideUp = TranslateAnimation(0f, 0f, contentView.y, contentView.height.toFloat())
         animateSlideUp.duration = 300
         animateSlideUp.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationStart(animation: Animation) {
@@ -413,7 +407,6 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
             }
 
             override fun onAnimationEnd(animation: Animation) {
-                onMenuItemSelectedListener?.onPopupDismissed()
                 dismiss()
             }
 
@@ -422,6 +415,21 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
             }
         })
         contentView.startAnimation(animateSlideUp)
+    }
+
+    override fun dismiss() {
+        setPopupFocusable(false)
+        onMenuItemSelectedListener?.onPopupDismissed()
+        super.dismiss()
+    }
+
+    /**
+     * When [PopupWindow] is visible set true if need to activate focusable and enable outside clickable
+     * @param value enable or disable popup focusable
+     */
+    private fun setPopupFocusable(value: Boolean) {
+        isFocusable = value
+        isTouchable = value
     }
 
     /**
