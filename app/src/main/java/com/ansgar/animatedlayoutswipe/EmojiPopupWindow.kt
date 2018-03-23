@@ -12,8 +12,8 @@ import android.view.animation.TranslateAnimation
 import java.util.ArrayList
 
 /**
- * Created by kirill on 4.3.18.
- */
+* Copyright (c) 2018 CustomPopupWindow.
+*/
 class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, backgroundResId: Int) :
         PopupWindow(contentView), View.OnTouchListener {
 
@@ -228,7 +228,7 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
     }
 
     /**
-     * Remove specific label view with disapear animation
+     * Remove specific label view with disappear animation
      * @param startAlpha start alpha value
      * @param endAlpha end alpha value
      * @param duration animation time in milliseconds
