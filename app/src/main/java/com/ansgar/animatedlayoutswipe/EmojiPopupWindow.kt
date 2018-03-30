@@ -58,7 +58,7 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
         width = childrenContainerLl?.childCount?.let {
             defaultChildParams?.width?.times(it)
         } ?: 0
-        height = defaultChildParams?.height?.times(3) ?: 0
+        height = defaultChildParams?.height?.times(4) ?: 0
 
         setTouchInterceptor(this)
     }
@@ -103,14 +103,20 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
                 touchXPos = x
                 touchYPos = y
 
-                onMoveMotionEvent(x, y)
+                if (touchCount > 0) onMoveMotionEvent(x, y)
             }
             MotionEvent.ACTION_MOVE -> {
                 if (topSwipeArea == 0 || bottomSwipeArea == 0) {
                     topSwipeArea = -contentView.height
                     bottomSwipeArea = contentView.height / 2
                 }
-                if (Math.abs(x - touchXPos) >= 30 || Math.abs(y - touchYPos) >= 30) {
+
+                if (touchXPos == 0 || touchYPos == 0) {
+                    touchXPos = x
+                    touchYPos = y
+                }
+
+                if (Math.abs(x - touchXPos) >= 60 || Math.abs(y - touchYPos) >= 60) {
                     onMoveMotionEvent(x, y)
                     touchXPos = x
                     touchYPos = y
@@ -124,8 +130,13 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
                         pulseAnimationStarted = pulseAnimation(it)
                     }
                 }
+                touchCount = 0
 
-                if (!checkInArea(x, y)) dismissPopup()
+                if (!checkInArea(x, y)) {
+                    executeScaleAnimation(contentView, 0f, 0f,
+                            contentView.height.toFloat(), 300, true)
+                }
+
             }
         }
         return false
@@ -286,7 +297,7 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
             val layoutParams = view.layoutParams
             if (resizeWidth) layoutParams.width = value
             layoutParams.height = value
-            view.layoutParams = layoutParams
+            view.requestLayout()
         }
         valueAnimator.duration = duration
         return valueAnimator
@@ -342,7 +353,7 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
             }
 
             override fun onAnimationEnd(animation: Animator?) {
-                dismissPopup()
+                executeScaleAnimation(contentView, 0f, 0f, contentView.height.toFloat(), 300, true)
             }
 
             override fun onAnimationCancel(animation: Animator?) {
@@ -351,7 +362,7 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
 
             override fun onAnimationStart(animation: Animator?) {
                 disappearViews()
-                disappearBackground()
+                backgroundView?.let { executeAlphaAnimation(it, 1f, 0f, 100) }
                 removeChildLabel()
             }
         })
@@ -368,21 +379,15 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
         (0 until size)
                 .filter { currentPosition != it }
                 .map { childrenContainerLl?.getChildAt(it) }
-                .forEach { view -> view?.let { executeAlphaAnimation(it, 1.0f, 0.0f, 100) } }
+                .forEach { view ->
+                    view?.let {
+                        executeScaleAnimation(it, 0f, 0f, view.height.toFloat())
+                    }
+                }
     }
 
     /**
-     * Execute disappear animation for [backgroundView]
-     */
-    private fun disappearBackground() {
-        val alphaAnimation = AlphaAnimation(1.0f, 0.0f)
-        alphaAnimation.duration = 100
-        backgroundView?.alpha = 0f
-        backgroundView?.startAnimation(alphaAnimation)
-    }
-
-    /**
-     * Execute alpha animation for [View]
+     * Execute alpha animation for [View] when item selected
      * @param view is the view which need to animate
      * @param startAlpha start alpha value
      * @param endAlpha end alpha value
@@ -396,25 +401,36 @@ class EmojiPopupWindow(contentView: RelativeLayout?, resourceId: Int, background
     }
 
     /**
-     * Disposes of the popup window with animation
+     * Execute scale animation for child [View] when item selected
+     * @param view is the view which need to animate
+     * @param duration animation time in milliseconds
      */
-    private fun dismissPopup() {
-        val animateSlideUp = TranslateAnimation(0f, 0f, contentView.y, contentView.height.toFloat())
-        animateSlideUp.duration = 300
-        animateSlideUp.setAnimationListener(object : Animation.AnimationListener {
-            override fun onAnimationStart(animation: Animation) {
+    private fun executeScaleAnimation(view: View, scaleX: Float, scaleY: Float, translationY: Float,
+                                      duration: Long = 300, dismiss: Boolean = false) {
+        val scaleAnimation = ObjectAnimator.ofPropertyValuesHolder(view,
+                PropertyValuesHolder.ofFloat("scaleX", scaleX),
+                PropertyValuesHolder.ofFloat("scaleY", scaleY),
+                PropertyValuesHolder.ofFloat("translationY", translationY)
+        )
+        scaleAnimation.duration = duration
+        scaleAnimation.addListener(object : Animator.AnimatorListener {
+            override fun onAnimationRepeat(animation: Animator?) {
 
             }
 
-            override fun onAnimationEnd(animation: Animation) {
-                dismiss()
+            override fun onAnimationEnd(animation: Animator?) {
+                if (dismiss) dismiss()
             }
 
-            override fun onAnimationRepeat(animation: Animation) {
+            override fun onAnimationCancel(animation: Animator?) {
+
+            }
+
+            override fun onAnimationStart(animation: Animator?) {
 
             }
         })
-        contentView.startAnimation(animateSlideUp)
+        scaleAnimation.start()
     }
 
     override fun dismiss() {
